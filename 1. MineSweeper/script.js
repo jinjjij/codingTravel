@@ -10,7 +10,6 @@ class Grid{
 
 class game{
     constructor(size_x, size_y, bombNum){
-        console.log("new game!");
         this.size_x = parseInt(size_x);
         this.size_y = parseInt(size_y);
         this.bombNum = parseInt(bombNum);
@@ -95,7 +94,10 @@ class game{
 
     pressGrid(x,y){
         // check if position is out of board
-        if(this._isoutofGrid(x,y))                  return;
+        if(this._isoutofGrid(x,y)){
+            console.log("early return in pressGrid : outofGrid");
+            return;
+        }                  
 
         // if position is Flagged?
         if(this.board[x][y].isFlaged == true)       return;
@@ -103,16 +105,18 @@ class game{
         // check if position is already revealed
         // -> if there is equal amount of flags around
         // -> reveal adjacent grids
-        if(this.board[x][y].isRevealed == true){
+        if(this.board[x][y].isRevealed == true && this.board[x][y].num != 0){
             console.log("revealed cell");
             let adjacentFlagCount = 0;
             for(let i=-1;i<2;i++)
                 for(let j=-1;j<2;j++)
-                    if(!this._isoutofGrid(x,y) && this.board[x+i][y+j].isFlaged)   adjacentFlagCount++;
+                    if(!(this._isoutofGrid(x+i,y+j)) && this.board[x+i][y+j].isFlaged)   adjacentFlagCount++;
             
             if(this.board[x][y].num == adjacentFlagCount){
                 this._pressSurroundGrid(x,y);
             }
+
+            return;
         }
 
 
@@ -159,12 +163,18 @@ class game{
         let xpos = cellMargin + x*(cellSize+cellMargin);
         let ypos = cellMargin + y*(cellSize+cellMargin);
 
+        stroke('black');
+        fill('gray');
+        square (xpos, ypos, cellSize);
+
         if(curGame.board[x][y].isRevealed == true){
             stroke('black');
             fill('white');
             square (xpos, ypos, cellSize);
         }
         
+        
+
         fill('black');
         textAlign(0, 0);
         textSize(cellSize*3/4);
@@ -175,13 +185,17 @@ class game{
             text(this.board[x][y].num, xpos + cellSize/6, ypos + cellSize/6, cellSize, cellSize);
         }
         
+        /*
         if(curGame.board[x][y].isRevealed == false){
             stroke('black');
             fill('gray');
             square (xpos, ypos, cellSize);
         }
+        */
 
         if(curGame.board[x][y].isFlaged){
+            stroke('black');
+            fill('black');
             text('F', xpos + cellSize/6, ypos + cellSize/6, cellSize, cellSize);
         }
     }
@@ -204,19 +218,19 @@ let gameStatus;
 
 function initGame(x,y,b){
     gameStatus = "game";
-    console.log("initGame!" + x + y + b);
+    console.log("initGame!" + '('+x+','+y+','+b+')');
     curGame = new game(x,y,b);
     draw();
 }
 
 
 function setup() {
+    console.log("Page Loaded");
     gameStatus = "menu";
     createCanvas(500, 500);
 }
 
 function draw() {
-    background('gray');
     if(gameStatus == "game" && curGame){
         curGame.drawBoard();
     } 
@@ -227,12 +241,13 @@ function draw() {
 }
 
 
-function mouseClicked(){
+function mouseReleased(){
     // 게임오버됐거나 게임 오브젝트가 없으면 exit
     if(curGame && gameStatus == "game"){
         let x = parseInt(mouseX/(cellSize+cellMargin));
         let y = parseInt(mouseY/(cellSize+cellMargin));
-
+        
+        console.log(mouseButton);
         if(this._isoutofGrid){
             return;
         }
@@ -256,15 +271,10 @@ function menu(){
     let inp_y = createInput("10", Number);
     let inp_b = createInput("10", Number);
     let but   = createButton("Create Game");
-    //but.mousePressed(initGame(inp_x.value(), inp_y.value(), inp_b.value()));
     but.mousePressed(func => initGame(inp_x.value(), inp_y.value(), inp_b.value()));
-    console.log(inp_x.value());
 }
 
 
-function test(){
-    console.log("wtf");
-}
 /*
 2. 게임시작 UI
     -> 게임사이즈(x, y), 폭탄의 개수 입력받고 게임 init
