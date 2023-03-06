@@ -1,8 +1,9 @@
 
 class Grid{
-    constructor(num, isRevealed){
-        this.num = num;
-        this.isRevealed = isRevealed;
+    constructor(){
+        this.num = 0;
+        this.isRevealed = false;
+        this.isFlaged = false;
     }
 }
 
@@ -10,11 +11,10 @@ class Grid{
 class game{
     constructor(size_x, size_y, bombNum){
         console.log("new game!");
-        this.size_x = size_x;
-        this.size_y = size_y;
-        this.bombNum = bombNum;
-        this.gameStatus = "nothing";
-        this.board = this.createBoard(size_x, size_y);
+        this.size_x = parseInt(size_x);
+        this.size_y = parseInt(size_y);
+        this.bombNum = parseInt(bombNum);
+        this.board = this.createBoard(this.size_x, this.size_y);
         this._positionBomb();
     }
 
@@ -68,14 +68,13 @@ class game{
 
     createBoard(sizeX, sizeY){
         var arr = new Array(sizeX);
-        
-        for(var i=0; i<arr.length;i++){
+        for(let i=0; i<arr.length;i++){
             arr[i] = new Array(sizeY);
         }
         
         for(let x=0; x<sizeX; x++){
-            for(let y=0; y<sizeY; y++){
-                arr[x][y] = new Grid(0, false);
+            for(let y=0; y < sizeY; y++){
+                arr[x][y] = new Grid();
             }
         }
         return arr;
@@ -98,8 +97,23 @@ class game{
         // check if position is out of board
         if(this._isoutofGrid(x,y))                  return;
 
+        // if position is Flagged?
+        if(this.board[x][y].isFlaged == true)       return;
+
         // check if position is already revealed
-        if(this.board[x][y].isRevealed == true)     return;
+        // -> if there is equal amount of flags around
+        // -> reveal adjacent grids
+        if(this.board[x][y].isRevealed == true){
+            console.log("revealed cell");
+            let adjacentFlagCount = 0;
+            for(let i=-1;i<2;i++)
+                for(let j=-1;j<2;j++)
+                    if(!this._isoutofGrid(x,y) && this.board[x+i][y+j].isFlaged)   adjacentFlagCount++;
+            
+            if(this.board[x][y].num == adjacentFlagCount){
+                this._pressSurroundGrid(x,y);
+            }
+        }
 
 
         // reveal grid
@@ -109,7 +123,6 @@ class game{
         if(this.board[x][y].num == -1){
             // gameover!
             console.log("GameOver!!");
-            this.gameStatus = "gameOver";
         }
 
         // if empty -> reveal adjacent tiles
@@ -120,6 +133,25 @@ class game{
 
         // else ( Grid is 1~8 )
         // just return nothing
+    }
+
+
+    flagGrid(x,y){
+        // check if position is out of board
+        if(this._isoutofGrid(x,y))  return;
+
+        // check if position is already revealed
+        if(this.board[x][y].isRevealed) return;
+
+        // if position is already flaged
+        // -> unflag
+        // else
+        // -> flag
+        if(this.board[x][y].isFlaged == true){
+            this.board[x][y].isFlaged = false;
+        }else{
+            this.board[x][y].isFlaged = true;
+        }
     }
 
 
@@ -148,6 +180,10 @@ class game{
             fill('gray');
             square (xpos, ypos, cellSize);
         }
+
+        if(curGame.board[x][y].isFlaged){
+            text('F', xpos + cellSize/6, ypos + cellSize/6, cellSize, cellSize);
+        }
     }
 
 
@@ -161,51 +197,74 @@ class game{
 
 }
 
-let curGame;
+let curGame = null;
 let cellSize = 30;
 let cellMargin = 5;
+let gameStatus;
 
-function initGame(){
-    curGame = new game(10, 10, 10);
+function initGame(x,y,b){
+    gameStatus = "game";
+    console.log("initGame!" + x + y + b);
+    curGame = new game(x,y,b);
+    draw();
 }
 
 
 function setup() {
-    menu();
+    gameStatus = "menu";
     createCanvas(500, 500);
 }
 
 function draw() {
     background('gray');
-    if(curGame) curGame.drawBoard();
-
+    if(gameStatus == "game" && curGame){
+        curGame.drawBoard();
+    } 
+    else if(gameStatus == "menu"){
+        menu();
+    }
     noLoop();
 }
 
 
 function mouseClicked(){
     // 게임오버됐거나 게임 오브젝트가 없으면 exit
-    if(curGame == null || curGame.gameStatus == "gameOver"){
-        return;
-    }
+    if(curGame && gameStatus == "game"){
+        let x = parseInt(mouseX/(cellSize+cellMargin));
+        let y = parseInt(mouseY/(cellSize+cellMargin));
 
-    curGame.pressGrid(parseInt(mouseX/(cellSize+cellMargin)), parseInt(mouseY/(cellSize+cellMargin)));
-    draw();
+        if(this._isoutofGrid){
+            return;
+        }
+
+        if(mouseButton == 'left'){
+            curGame.pressGrid(x, y);
+        }else if(mouseButton == 'right'){
+            console.log("flag! : "+x+", "+y);
+            // flag
+            curGame.flagGrid(x,y);
+            
+        }
+        
+        draw();
+    }
 }
 
 
 function menu(){
-    let inp_x = createInput("x size", Number);
-    let inp_y = createInput("y size", Number);
-    let inp_b = createInput("bomb number", Number);
+    let inp_x = createInput("10", Number);
+    let inp_y = createInput("10", Number);
+    let inp_b = createInput("10", Number);
     let but   = createButton("Create Game");
-    but.mousePressed(initGame(inp_x.value(), inp_y.value(), inp_b.value()));
-
-    inp_x.position(0,0);
-    inp_x.size(100);
+    //but.mousePressed(initGame(inp_x.value(), inp_y.value(), inp_b.value()));
+    but.mousePressed(func => initGame(inp_x.value(), inp_y.value(), inp_b.value()));
     console.log(inp_x.value());
 }
 
+
+function test(){
+    console.log("wtf");
+}
 /*
 2. 게임시작 UI
     -> 게임사이즈(x, y), 폭탄의 개수 입력받고 게임 init
