@@ -113,6 +113,8 @@ class game{
             if(this.board[x][y].num == adjacentFlagCount){
                 this._pressSurroundGrid(x,y);
             }
+
+            return;
         }
 
 
@@ -262,9 +264,6 @@ function menu(){
 }
 
 
-function test(){
-    console.log("wtf");
-}
 /*
 2. 게임시작 UI
     -> 게임사이즈(x, y), 폭탄의 개수 입력받고 게임 init
