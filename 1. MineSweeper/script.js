@@ -14,7 +14,6 @@ class game{
         this.size_y = parseInt(size_y);
         this.bombNum = parseInt(bombNum);
         this.board = this.createBoard(this.size_x, this.size_y);
-        this._positionBomb();
 
         // design
         this.cellMargin = 2;
@@ -30,6 +29,7 @@ class game{
                           '#810500', '#2a9494', '#000000', '#808080'];
         
         this.clickProtection = true;
+        this.firstClick = true;
     }
 
 
@@ -60,13 +60,18 @@ class game{
     }
 
 
-    _positionBomb(){
+    _positionBomb(avoidX, avoidY){
         let tempBombNum = this.bombNum;
         let posx, posy;
 
         while(tempBombNum>0){
             posx = Math.floor(Math.random()*this.size_x);
             posy = Math.floor(Math.random()*this.size_y);
+
+            // avoid initial click position
+            if(abs(posx - avoidX) <= 1 || abs(posy - avoidY) <= 1){
+                continue;
+            }
 
             if(this.board[posx][posy].num == -1){
                 continue;
@@ -112,6 +117,12 @@ class game{
         if(this._isoutofGrid(x,y)){
             //console.log("early return in pressGrid : outofGrid");
             return;
+        }
+
+        // in first press -> position bombs
+        if(this.firstClick && bymouse){
+            this.firstClick = false;
+            this._positionBomb(x,y);
         }
 
         // if position is Flagged?
