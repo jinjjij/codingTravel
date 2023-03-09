@@ -30,6 +30,8 @@ class game{
         
         this.clickProtection = true;
         this.firstClick = true;
+
+        this.flgCnt = 0;
     }
 
 
@@ -183,14 +185,31 @@ class game{
         // else
         // -> flag
         if(this.board[x][y].isFlaged == true){
+            this.flgCnt --;
             this.board[x][y].isFlaged = false;
         }else{
+            this.flgCnt ++;
             this.board[x][y].isFlaged = true;
         }
     }
 
 
     drawCell(x,y){
+        // left bomb count, timer
+        push();
+            let hor = this.size_x * (this.cellMargin + this.cellSize) + this.cellMargin;
+            // temp
+            let timer = '00:00';
+            stroke('white');
+            fill('white');
+            textSize(50);
+            text(this.bombNum - this.flgCnt,0,0,100,100);
+            textAlign(RIGHT);
+            text(timer,hor-100,0,100,100);
+            
+        pop();
+        push();
+        translate(0,100);
         let cM = this.cellMargin;
         let cS = this.cellSize;
 
@@ -234,6 +253,7 @@ class game{
             fill('black');
             text('F', xpos + cS/6, ypos + cS/6, cS, cS);
         }
+        pop();
     }
 
 
@@ -251,7 +271,7 @@ class game{
         let hor = this.size_x * (this.cellMargin + this.cellSize) + this.cellMargin;
         let ver = this.size_y * (this.cellMargin + this.cellSize) + this.cellMargin;
 
-        createCanvas(hor, ver);
+        createCanvas(hor, ver+100);
         background(this.backgroundColor);
     }
 
